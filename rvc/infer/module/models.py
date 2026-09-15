@@ -312,7 +312,10 @@ class SineGen(torch.nn.Module):
         )
         rad2 = torch.fmod(rad[..., -1:].float() + 0.5, 1.0) - 0.5
         rad_acc = rad2.cumsum(dim=1).fmod(1.0).to(f0)
-        rad += F.pad(rad_acc, (0, 0, 1, -1))
+        if rad_acc.device.type == "privateuseone":  # DirectML: mixed-sign F.pad unsupported
+            rad += F.pad(rad_acc.cpu(), (0, 0, 1, -1)).to(rad_acc.device)
+        else:
+            rad += F.pad(rad_acc, (0, 0, 1, -1))
         rad = rad.reshape(f0.shape[0], -1, 1)
         rad = torch.multiply(
             rad,

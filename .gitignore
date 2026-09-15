@@ -19,11 +19,10 @@ tests/out/
 rvc/assets/pretrained_v2/
 rvc/assets/pymss_weights/
 
-# Only ship the latest Kashif checkpoint - not every intermediate epoch snapshot, and not
-# the abubakar_test (Stage 1) model, which is a separate person's voice not covered by this
-# repo's consent scope. Update the "!" line below each time a newer epoch is trained.
-rvc/assets/weights/*.pth
-!rvc/assets/weights/kashif_test_e21_s651.pth
+# Ship every Kashif epoch checkpoint (so nobody needs to request a model separately),
+# but not the abubakar_test (Stage 1) model - that's a separate person's voice, not
+# covered by this repo's consent scope.
+rvc/assets/weights/abubakar_test_*.pth
 
 # abubakar_test's index is Stage 1 (a different person's voice) - out of scope here.
 # No Kashif index exists yet (the index-build step hasn't been run).
