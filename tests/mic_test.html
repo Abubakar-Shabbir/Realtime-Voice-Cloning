@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RVC Mic Test</title>
+<style>
+  body { font: 16px system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+  select, button { font-size: 1rem; padding: .4rem; margin: .3rem 0; }
+  #meter { height: 20px; background: #ddd; border-radius: 4px; overflow: hidden; }
+  #bar { height: 100%; width: 0; background: #2a9d4b; }
+  pre { background: #f3f3f3; padding: .6rem; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>RVC virtual microphone test</h1>
+<button id="perm">1. Allow microphone access</button><br>
+<label>2. Input device: <select id="dev"></select></label><br>
+<div id="meter"><div id="bar"></div></div>
+<button id="rec" disabled>3. Record 5 seconds</button>
+<audio id="play" controls></audio>
+<pre id="info">Waiting for permission…</pre>
+<script>
+const $ = id => document.getElementById(id);
+let stream, raf;
+
+async function listDevices() {
+  const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "audioinput");
+  $("dev").innerHTML = devs.map(d => `<option value="${d.deviceId}">${d.label || d.deviceId}</option>`).join("");
+  const rvc = devs.find(d => /RVC Virtual Microphone/i.test(d.label) && !/monitor/i.test(d.label));
+  if (rvc) $("dev").value = rvc.deviceId;
+  return devs;
+}
+
+async function open(deviceId) {
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  cancelAnimationFrame(raf);
+  stream = await navigator.mediaDevices.getUserMedia({
+    audio: { deviceId: { exact: deviceId }, echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+  });
+  const track = stream.getAudioTracks()[0];
+  $("info").textContent = `Selected track label: ${track.label}\nsettings: ${JSON.stringify(track.getSettings(), null, 1)}`;
+  document.title = `RVC Mic Test - ${track.label}`;
+  const ctx = new AudioContext();
+  const an = ctx.createAnalyser();
+  ctx.createMediaStreamSource(stream).connect(an);
+  const buf = new Float32Array(an.fftSize);
+  const tick = () => {
+    an.getFloatTimeDomainData(buf);
+    const rms = Math.sqrt(buf.reduce((s, v) => s + v * v, 0) / buf.length);
+    $("bar").style.width = Math.min(100, rms * 400) + "%";
+    raf = requestAnimationFrame(tick);
+  };
+  tick();
+  $("rec").disabled = false;
+}
+
+$("perm").onclick = async () => {
+  const tmp = await navigator.mediaDevices.getUserMedia({ audio: true });
+  tmp.getTracks().forEach(t => t.stop());
+  const devs = await listDevices();
+  $("info").textContent = "Audio inputs:\n" + devs.map(d => "- " + d.label).join("\n");
+  await open($("dev").value);
+};
+$("dev").onchange = () => open($("dev").value);
+$("rec").onclick = () => {
+  const chunks = [];
+  const mr = new MediaRecorder(stream);
+  mr.ondataavailable = e => chunks.push(e.data);
+  mr.onstop = () => { $("play").src = URL.createObjectURL(new Blob(chunks)); $("rec").disabled = false; };
+  $("rec").disabled = true;
+  mr.start();
+  setTimeout(() => mr.stop(), 5000);
+};
+</script>
+</body>
+</html>

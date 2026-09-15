@@ -1,0 +1,36 @@
+# Python environment
+venv/
+
+# Training working files, logs, and intermediates (regenerable, not needed to use a trained model)
+logs/
+rvc/logs/
+
+# Raw personal audio recordings (not needed to use the trained model; keep local)
+dataset/
+New_K_Audio/
+Checking/
+downloads/
+
+# Generated test artifacts
+tests/out/
+
+# Base pretrain checkpoints - only needed to continue/retrain, not to use an existing model.
+# Get these from the official RVC-Project releases if you want to train your own voice.
+rvc/assets/pretrained_v2/
+rvc/assets/pymss_weights/
+
+# Only ship the latest Kashif checkpoint - not every intermediate epoch snapshot, and not
+# the abubakar_test (Stage 1) model, which is a separate person's voice not covered by this
+# repo's consent scope. Update the "!" line below each time a newer epoch is trained.
+rvc/assets/weights/*.pth
+!rvc/assets/weights/kashif_test_e21_s651.pth
+
+# abubakar_test's index is Stage 1 (a different person's voice) - out of scope here.
+# No Kashif index exists yet (the index-build step hasn't been run).
+rvc/assets/indices/
+
+# Generic benchmark-only files, not part of the trained model.
+tests/bench_models/
+
+__pycache__/
+*.pyc
