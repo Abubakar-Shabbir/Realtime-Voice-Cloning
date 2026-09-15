@@ -1,17 +1,23 @@
-# Python 3.12 x64 / Windows + Linux / CPU
+# Python 3.12 x64 / Windows + Linux + macOS / CPU
 #
 # Install the complete environment in one stage from the project root:
-#   python -m pip install -r requirments_cpu_py312.txt
+#   python -m pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements-cpu-local.txt
 # Windows portable runtime users may replace `python` with `runtime\python.exe -I`.
 #
 # torch-directml 0.2.5 is built against the PyTorch 2.4.1 family.  These exact
 # CPU versions are therefore intentional. DirectML is installed only on Windows;
-# Linux AMD/Intel systems use the CPU execution path.
+# Linux AMD/Intel systems use the CPU execution path. macOS has no "+cpu" wheel
+# variant (its PyPI build is universal CPU/MPS), so it's pinned separately -
+# the --extra-index-url above is harmless on macOS, pip just won't find a match
+# there and falls back to the default PyPI wheel.
 
 
-torch==2.4.1+cpu
-torchaudio==2.4.1+cpu
-torchvision==0.19.1+cpu
+torch==2.4.1+cpu; platform_system != "Darwin"
+torchaudio==2.4.1+cpu; platform_system != "Darwin"
+torchvision==0.19.1+cpu; platform_system != "Darwin"
+torch==2.4.1; platform_system == "Darwin"
+torchaudio==2.4.1; platform_system == "Darwin"
+torchvision==0.19.1; platform_system == "Darwin"
 torch-directml==0.2.5.dev240914; platform_system == "Windows"
 
 # Packaging support. Gradio 3.14 still imports pkg_resources, so Setuptools
